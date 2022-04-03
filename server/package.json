@@ -8,16 +8,21 @@
         "dev": "set NODE_ENV=development&nodemon ./src/index.ts",
         "start": "set NODE_ENV=production&node ./build/index.js",
         "build": "tsc",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "prettier:fix": "prettier -w src/**/*.{ts,tsx,scss,css,json}",
+        "prettier:check": "prettier -c src/**/*.{ts,tsx,scss,css,json}"
     },
     "dependencies": {
+        "body-parser": "^1.19.2",
         "dotenv": "^16.0.0",
         "express": "^4.17.3",
+        "jsonwebtoken": "^8.5.1",
         "mongoose": "^6.2.8"
     },
     "devDependencies": {
         "@types/dotenv": "^8.2.0",
         "@types/express": "^4.17.13",
+        "@types/jsonwebtoken": "^8.5.8",
         "@types/mongoose": "^5.11.97",
         "@types/node": "^17.0.23",
         "nodemon": "^2.0.15",
