@@ -1,6 +1,9 @@
 class LAPIS_ENV {
+    public static readonly SHOP_NAME:string = process.env.SHOP_NAME || '';
+
     public static readonly IS_DEV: boolean =
         (process.env.NODE_ENV && process.env.NODE_ENV === 'development') || false;
+
     public static readonly PORT: number = process.env.PORT
         ? parseInt(process.env.PORT)
         : 8080;
@@ -8,6 +11,7 @@ class LAPIS_ENV {
     // DATABASE
     public static readonly DATABASE_HOST: string =
         process.env.DATABASE_HOST || '127.0.0.1:27017';
+
     public static readonly DATABASE_NAME: string = process.env.DATABASE_NAME || 'default';
     //
     // TOKEN

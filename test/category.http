@@ -1,0 +1,26 @@
+
+### Create category
+POST  http://127.0.0.1/admin/category/create
+Content-Type: application/json
+
+{
+    "title": "sub_2_3_3",
+    "parentId": "624b1897a5a085cf5bea63b7"
+}
+
+
+### update category
+PATCH  http://127.0.0.1/admin/category/update/624b148ffb050772e0ed3218
+Content-Type: application/json
+
+{
+    "title": "sub_2",
+    "parentId": "624b1489fb050772e0ed3216"
+}
+
+### delete category
+DELETE  http://127.0.0.1/admin/category/remove/624b148ffb050772e0ed3218
+
+
+### find category
+GET  http://127.0.0.1/admin/category/find/624b18b2a5a085cf5bea63c0

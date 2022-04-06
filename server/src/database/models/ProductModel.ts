@@ -3,8 +3,18 @@ import mongoose from 'mongoose';
 import productSchema, {
     IProductSchema,
     TProductDocument,
-    TProductModel,
+    IProductModel,
+    IProductDocument,
 } from '../schemas/productSchema';
+
+// VIRTUAL PROPERTIES
+
+productSchema.virtual('currentPrice').get(function(this: IProductSchema):number{
+    return this.price*this.discount;
+});
+
+
+// METHODS
 
 productSchema.methods.slugIsExisted = async function () {
     if (!this.slug) return undefined;
@@ -23,6 +33,9 @@ productSchema.methods.slugIsExisted = async function () {
     return true;
 };
 
+
+// STATICS
+
 productSchema.statics.findBySlug = async function (
     slug: string,
 ): Promise<TProductDocument | null> {
@@ -31,7 +44,16 @@ productSchema.statics.findBySlug = async function (
     });
 };
 
-const ProductModel = mongoose.model<IProductSchema, TProductModel>(
+// EVENT
+
+productSchema.pre('save', async function(next) {
+    const currentTime = new Date(Date.now());
+    this.updatedAt = currentTime;
+    this.createdAt = currentTime;
+    next();
+});
+
+const ProductModel = mongoose.model<IProductDocument, IProductModel>(
     'Product',
     productSchema,
 );

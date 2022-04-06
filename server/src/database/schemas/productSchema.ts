@@ -1,40 +1,46 @@
 import mongoose from 'mongoose';
 
-import IGeneralSchema from '../../core/types/IGeneralSchema';
-import TMongooseDocument from '../../core/types/TMongooseDocument';
+import {TLapisMongooseDocument, ILapisGeneralSchema} from '../../core/LapisTypes';
+import CategoryModel from '../models/CategoryModel';
 
-interface IProductSchema extends IGeneralSchema {
+
+const checkSlug = /^[a-z0-9\-]+$/;
+
+interface IProductSchema extends ILapisGeneralSchema, mongoose.Document {
     _id: mongoose.Types.ObjectId;
     categoryId?: mongoose.Types.ObjectId;
-    title: String;
-    slug: String;
-    summary: String;
-    price: Number;
-    discount: Number;
+    title: string;
+    slug: string;
+    summary: string;
+    price: number;
+    discount: number;
     discountStartAt?: Date;
     discountEndAt?: Date;
-    quantity: Number;
-    description: String;
-    images: String[];
+    quantity: number;
+    description: string;
+    images: string[];
 }
 
-// method
-interface IProductMethods {
-    slugIsExisted: () => Promise<boolean | undefined>;
-}
-
-type TProductDocument = TMongooseDocument<IProductSchema & IProductMethods>;
+interface IProductDocument extends IProductSchema {
+    currentPrice: Number,
+    slugIsExisted: () => Promise<boolean | undefined>
+};
 
 // static methods
-interface IProductStatics {
+interface IProductModel extends mongoose.Model<IProductDocument>{
     findBySlug: (slug: string) => Promise<TProductDocument | null>;
 }
 
-type TProductModel = mongoose.Model<IProductMethods & IProductSchema> & IProductStatics;
-
-const productSchema = new mongoose.Schema<IProductSchema, TProductModel>({
+const productSchema = new mongoose.Schema<IProductDocument, IProductModel>({
     categoryId: {
         type: mongoose.SchemaTypes.ObjectId,
+        validate:{
+            validator: async (v:mongoose.Types.ObjectId|undefined): Promise<boolean> => {
+                if(!v) return true; // if id === undefined
+                return await CategoryModel.idIsExisted(v);
+            },
+            message: (v) => `Invalid categoryId: ${v.value} don't exists`
+        }
     },
     title: {
         type: String,
@@ -44,6 +50,10 @@ const productSchema = new mongoose.Schema<IProductSchema, TProductModel>({
         type: String,
         required: true,
         minlength: 1,
+        validate:{
+            validator: (v:String)=> checkSlug.test(v as string),
+            message: (v) => `Invalid slug: slug include [a-z0-9\\-]{1,}`
+        }
     },
     summary: {
         type: String,
@@ -93,5 +103,6 @@ const productSchema = new mongoose.Schema<IProductSchema, TProductModel>({
     },
 });
 
-export { IProductSchema, TProductDocument, TProductModel };
+type TProductDocument = TLapisMongooseDocument<IProductDocument>;
+export { IProductSchema, TProductDocument, IProductDocument, IProductModel };
 export default productSchema;

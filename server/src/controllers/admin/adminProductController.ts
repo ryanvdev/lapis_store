@@ -1,15 +1,13 @@
 import { NextFunction, Request, Response } from 'express';
 
-import lapisLog from '../core/lapisLog';
-import LAPIS_ENV from '../core/LAPIS_ENV';
-import { IProductSchema, TProductDocument } from '../database/schemas/productSchema';
-import ProductModel from '../database/models/ProductModel';
-import { isArray } from 'util';
+import lapisLog from '../../core/lapisLog';
+import LAPIS_ENV from '../../core/LAPIS_ENV';
+import { IProductSchema, TProductDocument } from '../../database/schemas/productSchema';
+import ProductModel from '../../database/models/ProductModel';
+import lapisRegex from '../../core/lapisRegex';
 
-class ProductController {
+class AdminProductController {
     public constructor() {}
-
-    private checkSlug = /^[a-z][a-z\-]*[a-z]$/;
 
     // [POST] /product/create
     public create = async (req: Request, res: Response, next: NextFunction) => {
@@ -27,7 +25,7 @@ class ProductController {
         const product: TProductDocument = new ProductModel();
         this.makeProduct(product, productFromClient);
 
-        // Save to datebase
+        // Save to database
         try {
             // if slug existed
             const slugIsExisted = await product.slugIsExisted();
@@ -57,6 +55,11 @@ class ProductController {
     public update = async (req: Request, res: Response, next: NextFunction) => {
         const productId: string = req.params.id;
 
+        // Check if id is objectId
+        if(!lapisRegex.objectId.test(productId)){
+            return res.status(404).send();
+        }
+
         // get and check request body
         const productFromClient: IProductSchema | undefined = req.body;
         if (!productFromClient) {
@@ -75,7 +78,7 @@ class ProductController {
         // update version and update time
         product.updatedAt = new Date(Date.now());
 
-        // Save to datebase
+        // Save to database
         try {
             // if slug existed
             const slugIsExisted = await product.slugIsExisted();
@@ -97,19 +100,79 @@ class ProductController {
     // [DELETE] /product/remove/:id
     public remove = async (req: Request, res: Response, next: NextFunction) => {
         const productId: string = req.params.id;
-        const result = await ProductModel.findByIdAndDelete(productId);
-        if (result) {
-            return res.status(200).json(result);
+
+        // Check if id is objectId
+        if(!lapisRegex.objectId.test(productId)){
+            return res.status(404).send();
+        }
+
+        const product = await ProductModel.findByIdAndDelete(productId);
+        if (product) {
+            return res.status(200).json(product);
         }
         return res.status(404).send();
     };
+
+    // [GET] /product/find/:id
+    public find = async (req: Request, res: Response, next: NextFunction) => {
+        const productId: string = req.params.id;
+
+        // Check if id is objectId
+        if(!lapisRegex.objectId.test(productId)){
+            return res.status(404).send();
+        }
+
+        const product = await ProductModel.findById(productId);
+
+        if(!product){
+            return res.status(404).send();
+        }
+
+        return res.status(200).json({
+            ...product.toObject(),
+            currentPrice: product.currentPrice
+        })
+    }
+
+    // [GET] /product/list
+    public list = async (req: Request, res: Response, next: NextFunction) => {
+        const product = await ProductModel.find().sort({
+            createdAt: -1
+        });
+
+        if(!product){
+            return res.status(404).send();
+        }
+
+        return res.status(200).json(product);
+    }
+
+    // [GET] /product/check-slug
+    public checkSlug = async (req: Request, res: Response, next: NextFunction) => {
+        const slug:string|undefined = req.query.slug &&  String(req.query.slug);
+        
+        if(!slug) return res.status(400).send();
+
+        const product = await ProductModel.findBySlug(slug);
+
+        let isExisted = true;
+        if(!product || product === null) isExisted = false;
+
+        // response
+        return res.status(200).json({
+            isExisted
+        });
+    }
 
     private makeProduct = (
         product: TProductDocument,
         productFromClient: IProductSchema,
     ) => {
         if (productFromClient.categoryId) {
-            product.categoryId = productFromClient.categoryId;
+            if(String(productFromClient.categoryId) === 'undefined'){
+                product.categoryId = undefined;
+            }
+            else product.categoryId = productFromClient.categoryId;
         }
 
         if (productFromClient.title) {
@@ -149,12 +212,10 @@ class ProductController {
         }
 
         if (productFromClient.images && Array.isArray(productFromClient.images)) {
-            product.images = productFromClient.images.filter((item) => {
-                return typeof item === 'string' || item instanceof String;
-            });
+            product.images = [...productFromClient.images];
         }
     };
 }
 
-const productController = new ProductController();
-export default productController;
+const adminProductController = new AdminProductController();
+export default adminProductController;

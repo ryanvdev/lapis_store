@@ -1,0 +1,41 @@
+### create
+POST  http://127.0.0.1/admin/product/create
+Content-Type: application/json
+
+{
+    "title": "Sản phẩm mới 5",
+    "slug": "san-pham-moi-5",
+    "categoryId": "624b1497fb050772e0ed321c",
+    "summary": "",
+    "discount": 1,
+    "quantity": 0
+}
+
+### update
+PATCH http://127.0.0.1/admin/product/update/624a58a1007c035050bcfc4f
+Content-Type: application/json
+
+{
+    "title": "Update 5",
+    "slug": "san-pham-moi-6",
+    "summary": "",
+    "price": 10,
+    "discount": 0.3,
+    "quantity": 0,
+    "images": ["img1", "img2", "img2", "img2"]
+}
+
+### remove
+DELETE  http://127.0.0.1/admin/product/remove/624a4a035eb88dfad6ed9f20
+
+
+
+
+### find
+GET  http://127.0.0.1/admin/product/find/624b29d16899bb73714d0b2d
+
+
+
+
+### check slug
+get http://127.0.0.1/admin/product/check-slug?slug=san-pham-moi-3

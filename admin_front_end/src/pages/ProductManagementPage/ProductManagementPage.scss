@@ -1,0 +1,22 @@
+.page.product-management-page {
+    display: block;
+    width: 100%;
+    height: 100%;
+    //
+    padding: 20px;
+    //
+    >section {
+        --category-width: 350px;
+        //
+        display: block;
+        float: left;
+        height: 100%;
+        // Categories
+        &:nth-child(1) {
+            width: var(--category-width);
+        }
+        &:nth-child(2) {
+            width: calc(100% - var(--category-width));
+        }
+    }
+}

@@ -1,4 +1,4 @@
-export type TLogType = 'INFO' | 'ERROR' | 'SUCCESS' | 'WAITTING';
+export type TLogType = 'INFO' | 'ERROR' | 'SUCCESS' | 'WAITTING' | 'WARNING';
 
 export enum ELogColor {
     Reset = '\x1b[0m',
@@ -31,18 +31,30 @@ export enum ELogColor {
 async function lapisLog(logType: TLogType, ...message: any) {
     let color = '';
     switch (logType) {
-        case 'ERROR':
+        case 'ERROR':{
             color = ELogColor.FgRed;
             break;
-        case 'INFO':
+        }
+            
+        case 'INFO':{
             color = ELogColor.FgBlue;
             break;
-        case 'SUCCESS':
+        }
+
+        case 'SUCCESS':{
             color = ELogColor.FgCyan;
             break;
-        case 'WAITTING':
+        }
+
+        case 'WAITTING':{
             color = ELogColor.FgYellow;
             break;
+        }
+
+        case 'WARNING':{
+            color = ELogColor.FgYellow;
+            break;
+        }
         default: {
             throw new Error('[lapisLog] Invalid logType');
         }
