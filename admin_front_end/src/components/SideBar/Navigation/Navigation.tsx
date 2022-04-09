@@ -12,13 +12,13 @@ export default function Navigation (props: INavigationProps) {
             <ul>
                 <li>
                     <Link to={'/product-management'}>
-                        <i>cases</i>
+                        <strong>view_in_ar</strong>
                         <span>Quản lý sản phẩm</span>
                     </Link>
                 </li>
                 <li>
                     <Link to={'/category-management'}>
-                        <i>category</i>
+                        <strong>category</strong>
                         <span>Quản lý danh mục</span>
                     </Link>
                 </li>

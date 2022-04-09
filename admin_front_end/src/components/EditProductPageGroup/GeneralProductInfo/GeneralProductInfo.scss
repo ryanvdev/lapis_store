@@ -1,0 +1,23 @@
+.general-product-info {
+    display: block;
+    //
+    width: 100%;
+    height: 500px;
+    //
+    >div {
+        --demo-width: 400px;
+        //
+        display: block;
+        float: left;
+        height: 100%;
+        //
+        // Demo
+        &:nth-child(1) {
+            width: var(--demo-width);
+            box-shadow: inset 2px 2px 2px rgba(0, 0, 0, 0.2), inset -2px -2px 2px rgba(255, 255, 255, 0.2);
+        }
+        &:nth-child(2) {
+            width: calc(100% - var(--demo-width));
+        }
+    }
+}

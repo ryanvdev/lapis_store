@@ -30,14 +30,14 @@ function Product (props: IProductProps) {
                     <strong>ID: </strong>
                     {props.product._id}
                 </div>
-                <div>
-                    <a href={productAddress}>{productAddress.slice(-40)}</a>
-                </div>
             </div>
             <div className='tool'>
                 <Link className='edit' to={`/${LAPIS_STATICS.EDIT_PRODUCT_PATH}/${props.product._id}`}>
                     edit
                 </Link>
+                <a href={productAddress} target='_bland'>
+                    visibility
+                </a>
             </div>
         </div>
     );

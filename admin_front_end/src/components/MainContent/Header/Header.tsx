@@ -1,5 +1,5 @@
 import * as React from 'react';
-import LapisSearch from '../../LapisSearch/LapisSearch';
+import LapisSearch from '../../LapisUi/LapisSearch/LapisSearch';
 
 import './Header.scss';
 
