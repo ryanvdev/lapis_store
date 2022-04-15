@@ -13,7 +13,7 @@ const allowOrigins:string[] = [
 
 const accessControlAllowLocalHost:TLapisMiddleware = async (req:Request, res:Response, next:NextFunction):Promise<void> => {
     const headersOrigin = req.headers.origin;
-    
+    console.log(headersOrigin);
     // 
     if(!headersOrigin){
         next();

@@ -1,0 +1,11 @@
+.app .side-bar {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    float: left;
+    //
+    width: var(--side-bar-width);
+    height: 100%;
+    //
+    background-color: rgba(255, 255, 255, 0.05);
+}

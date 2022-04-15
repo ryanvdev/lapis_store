@@ -106,6 +106,23 @@ class AdminCategoryController{
         } as ICategoryDocument)
     }
 
+    public list = async (req: Request, res: Response, next:NextFunction) =>{
+        const categories = await CategoryModel.find();
+        
+        const categoriesObject = categories.map((category)=>{
+            const {_id, title, parentId,createdAt, updatedAt} = category.toObject()
+            return {
+                _id,
+                title,
+                parentId,
+                createdAt,
+                updatedAt,
+            }
+        });
+
+        return res.status(200).json(categoriesObject);
+    }
+
     private makeCategory = (category:TCategoryDocument, categoryFromClient:ICategorySchema) => {
         if(categoryFromClient.title){
             category.title = categoryFromClient.title;

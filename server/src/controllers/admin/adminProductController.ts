@@ -128,10 +128,13 @@ class AdminProductController {
             return res.status(404).send();
         }
 
+        // lapisLog('WARNING')
+
         return res.status(200).json({
             ...product.toObject(),
             currentPrice: product.currentPrice
-        })
+        });
+
     }
 
     // [GET] /product/list
@@ -150,17 +153,27 @@ class AdminProductController {
     // [GET] /product/check-slug
     public checkSlug = async (req: Request, res: Response, next: NextFunction) => {
         const slug:string|undefined = req.query.slug &&  String(req.query.slug);
+        const id:string|undefined = req.query.id &&  String(req.query.id);
         
         if(!slug) return res.status(400).send();
 
         const product = await ProductModel.findBySlug(slug);
 
-        let isExisted = true;
-        if(!product || product === null) isExisted = false;
+        if(!product || product === null){
+            return res.status(200).json({
+                isExisted: false
+            }); 
+        }
+
+        if(id && id===product._id.toString()){
+            return res.status(200).json({
+                isExisted: false
+            });
+        }
 
         // response
         return res.status(200).json({
-            isExisted
+            isExisted: true
         });
     }
 

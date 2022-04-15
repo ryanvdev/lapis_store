@@ -1,0 +1,18 @@
+.side-bar .logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    //
+    width: 100%;
+    height: var(--header-height);
+    > span {
+        font-size: calc(var(--header-height) * 0.6);
+        font-weight: bold;
+        &:nth-child(1) {
+            color: rgb(255, 0, 255);
+        }
+        &:nth-child(2) {
+            color: rgb(0, 255, 255);
+        }
+    }
+}

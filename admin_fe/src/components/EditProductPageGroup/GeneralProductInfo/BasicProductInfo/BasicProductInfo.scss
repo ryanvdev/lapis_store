@@ -1,0 +1,24 @@
+.basic-product-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    //
+    width: 100%;
+    max-width: 600px;
+    height: auto;
+    padding: 30px;
+    background-color: rgba(255,255,255,0.05);
+    border-radius: 5px;
+    > .lapis-ui {
+        --lapis-width: 100%;
+        margin-bottom: 15px;
+        //
+        &.discount,
+        &.current-price,
+        &.discount-start-at,
+        &.discount-end-at{
+            width: 48%;
+        }
+    }
+}
