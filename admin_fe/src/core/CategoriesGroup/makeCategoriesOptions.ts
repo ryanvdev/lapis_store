@@ -1,8 +1,8 @@
-import { IOption } from '../../components/LapisUi/LapisSelection';
+import { ILapisSelectionOption } from '../../components/LapisUi/LapisSelection';
 import ICategory from '../types/ICategory';
 import makeCategoryPath from './makeCategoryPath';
 
-export default function makeCategoriesOptions(categories: ICategory[]): IOption[] {
+export default function makeCategoriesOptions(categories: ICategory[]): ILapisSelectionOption[] {
     return categories.map((category) => {
         return {
             label: makeCategoryPath(categories, category),

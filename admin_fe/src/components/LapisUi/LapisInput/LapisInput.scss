@@ -1,5 +1,13 @@
-.lapis-ui.lapis-input {
+.lapis-input {
+    --lapis-text-color: rgb(255,255,255);
+    --lapis-highlight-color: rgb(255,255,255);
     --lapis-width: 400px;
+    --lapis-underline-color: rgba(255,255,255,0.2);
+    --lapis-input-padding: 5px;
+    --lapis-underline-height: 2px;
+    --lapis-message-width: 150px;
+    --lapis-message-font-size: 14px;
+
     --lapis-input-title-height: 20px;
     --lapis-input-input-height: 30px;
     $input-padding: 5px;
@@ -26,6 +34,7 @@
             padding-left: $input-padding;
             //
             font-size: 17px;
+            color: var(--lapis-text-color);
             //
             transition: all 0.3s;
         }
@@ -49,7 +58,7 @@
             padding-right: $input-padding;
             //
             font-size: 17px;
-            color: whitesmoke;
+            color: var(--lapis-text-color);
             font-family: inherit;
             //
             outline: unset;
@@ -75,7 +84,7 @@
                     height: 60%;
                     aspect-ratio: 1;
                     //
-                    background-color: rgba(255, 255, 255, 0.4);
+                    background-color: var(--lapis-highlight-color);
                     // padding: 4px;
                     border-radius: 3px;
                     color: black;
@@ -94,6 +103,7 @@
             width: auto;
             height: 100%;
             aspect-ratio: 1;
+            cursor: default;
             >.icon {
                 display: flex;
                 justify-content: center;
@@ -105,26 +115,24 @@
                 font-size: calc(var(--lapis-input-input-height) * 0.8);
                 font-family: 'Material Icons Outlined';
                 //
-                cursor: pointer;
                 user-select: none;
             }
             >.message {
-                $message-width: 200px;
                 //
                 display: none;
                 position: relative;
                 z-index: 10;
                 //
-                left: -$message-width;
+                left: calc(var(--lapis-message-width) * -1);
                 top: -10px;
                 //
-                width: $message-width;
+                width: var(--lapis-message-width);
                 height: auto;
                 //
                 padding: 5px;
                 //
-                font-size: 14px;
-                color: lightblue;
+                font-size: var(--lapis-message-font-size);
+                color: white;
                 //
                 background-color: black;
                 //
@@ -142,16 +150,18 @@
     }
     >.line {
         display: block;
+        overflow: hidden;
+        //
         width: 100%;
-        height: 2px;
-        background-color: rgba(255, 255, 255, 0.5);
+        height: var(--lapis-underline-height);
+        background-color: var(--lapis-underline-color);
         >div {
             display: block;
             height: 100%;
             width: 0%;
             margin-left: auto;
             margin-right: auto;
-            background-color: rgba(0, 255, 255, 0.5);
+            background-color: var(--lapis-highlight-color);
             transition: width 0.3s;
         }
     }
@@ -166,7 +176,7 @@
             //
             font-size: 13px;
             //
-            color: aqua;
+            color: var(--lapis-highlight-color);
         }
     }
     .input-wrap>input {

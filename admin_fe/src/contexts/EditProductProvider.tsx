@@ -42,7 +42,11 @@ export default function EditProductProvider (props: React.PropsWithChildren<IEdi
             return ;
         }
 
-        setProduct(res.data);
+        const lapisProduct:IProduct = {...res.data}
+        const lapisProductFormData:IProductFormData = {...res.data, _id:undefined} as IProduct
+
+        setProduct(lapisProduct);
+        setProductFormData(lapisProductFormData);
     },[]);
 
     React.useEffect(()=>{

@@ -1,22 +1,22 @@
 import * as React from 'react';
-import { TLapisReactElements } from '../../../core/LapisType';
+
 import optimizeSearchInput from '../../../core/optimizeSearchInput';
+import ILapisSelectionCurrentOption from './ILapisSelectionCurrentOption';
+import ILapisSelectionEventData from './ILapisSelectionEventData';
+import ILapisSelectionOption from './ILapisSelectionOption';
+import LapisSelectionIconContainer from './LapisSelectionIconContainer';
+import LapisSelectionInput, { ILapisSelectionInputRef } from './LapisSelectionInput';
+import LapisSelectionLabelSelected from './LapisSelectionLabelSelected';
+import LapisSelectionOptions from './LapisSelectionOptions';
+import LapisSelectionUnderline from './LapisSelectionUnderline';
 
 import './LapisSelection.scss';
-
-export interface IOption {
-    label: string;
-    value: string | undefined;
-}
-
-export interface ISelectedEventData {
-    index: number;
-    option: IOption|undefined;
-}
+import LapisSelectionTitle from './LapisSelectionTitle';
+import LapisSelectionRemoveSelected from './LapisSelectionRemoveSelected';
 
 export interface ILapisSelectionProps {
     title?: string;
-    options: IOption[];
+    options?: ILapisSelectionOption[];
     maxLength?: number;
     selectedValue?: string;
     message?: string;
@@ -25,364 +25,268 @@ export interface ILapisSelectionProps {
     iconColor?:string;
     showIcon?:boolean;
 
-    onSelected?: (option: ISelectedEventData) => any;
-    onBlur?: (option: ISelectedEventData) => any | Promise<any>;
-}
-
-interface ICurrentOption extends IOption {
-    index: number;
+    onSelected?: (e: ILapisSelectionEventData) => any | Promise<any>;
+    onBlur?: (e: ILapisSelectionEventData) => any | Promise<any>;
 }
 
 function LapisSelection(props: ILapisSelectionProps) {
-    console.log('LapisSelection rerender');
-    const { onSelected, options, selectedValue, maxLength, onBlur } = props;
-    //
-    // STATE
-    const [classSelecting, setClassSelecting] = React.useState<'selecting' | ''>('');
-    const [classSelected, setClassSelected] = React.useState<'selected' | ''>('');
-    const [classInputEmpty, setClassInputEmpty] = React.useState<'input-empty' | ''>('');
+    const {options, onSelected, selectedValue} = props;
 
-    const [indexMark, setIndexMark] = React.useState<number>(-1);
-    const [currentOptions, setCurrentOptions] = React.useState<ICurrentOption[]>([]);
+    // states
+    const [selectedIndex, setSelectedIndex] = React.useState<number>(-1);
+    const [markPosition, setMarkPosition] = React.useState<number>(-1);
 
-    // REF
-    const selectedIndexRef = React.useRef<number>(-1);
-    const inputElmntRef = React.useRef<HTMLInputElement>(null);
+    const [selectingClassName, setSelectingClassName] = React.useState<' selecting'| ''>('');
+    const [selectedClassName, setSelectedClassName] = React.useState<' selected'| ''>('');
+    const [inputEmptyClassName, setInputEmptyClassName] = React.useState<' empty'| ''>('');
 
-    //
-    const optionsSorted: ICurrentOption[] = React.useMemo(() => {
-        const optionsCloned: ICurrentOption[] = [];
+    const [currentOptions, setCurrentOptions] = React.useState<ILapisSelectionCurrentOption[]>([]);
 
-        options.forEach((option, i) => {
-            optionsCloned.push({
+    // refs
+    // const selectedIndexRef = React.useRef<number>(selectedIndex);
+    // selectedIndexRef.current = selectedIndex;
+
+    const lengthOfCurrentOptions = React.useRef<number>(-1);
+    lengthOfCurrentOptions.current = currentOptions.length;
+
+    const markPositionRef = React.useRef<number>(-1);
+    markPositionRef.current = markPosition;
+
+    const currentOptionsRef = React.useRef<ILapisSelectionCurrentOption[]>(currentOptions);
+    currentOptionsRef.current = currentOptions;
+
+    const lapisSelectionInputRef = React.useRef<ILapisSelectionInputRef>(null);
+
+    // const memoLapisSelectionInputValueRef = React.useRef<string>('');
+
+    // memo
+    const optionsSorted = React.useMemo<ILapisSelectionCurrentOption[]>(()=>{
+        if(!options) return [];
+        const tmpOptions:ILapisSelectionCurrentOption[] = [];
+
+        options.forEach((option, index)=>{
+            tmpOptions.push({
                 ...option,
-                index: i,
+                index,
             });
         });
 
-        // sort by option label
-        optionsCloned.sort((optionA, optionB) => {
-            const labelA: string = optimizeSearchInput(optionA.label);
-            const labelB: string = optimizeSearchInput(optionB.label);
+        tmpOptions.sort((optionA, optionB)=>{
+            if(optionA.label > optionB.label) return 1;
+            if(optionA.label < optionB.label) return -1;
 
-            if (labelA === labelB) return 0;
-            if (labelA > labelB) return 1;
-            return -1;
+            if(optionA.value > optionB.value) return 1;
+            if(optionA.value < optionB.value) return -1;
+
+            return 0;
         });
 
-        return optionsCloned;
-    },
-    [options]
-    );
+        return tmpOptions;
+    }, [options])
 
-    //
-    //
-    // METHOD
+    // functions
 
-    const makeSelectedEventData = React.useCallback(()=>({
-        index: selectedIndexRef.current,
-        option: selectedIndexRef.current >= 0 ? options[selectedIndexRef.current] : undefined
-    }),
-    [options]
-    );
+    const makeLabelSelected = ():string=>{
+        if(selectedIndex < 0) return '';
+        if(!options) return '';
+        if(selectedIndex >= options.length) return '';
 
-    const makeLabelSelectedContent = () => {
-        if (options.length === 0) {
-            return '';
+        return options[selectedIndex].label;
+    }
+
+    const filterOptions = React.useCallback((keyword?: string):void=>{
+        const tmpOptions = [...optionsSorted]
+
+        if(!keyword){
+            setCurrentOptions(tmpOptions);
+            return;
         }
 
-        if (selectedIndexRef.current < 0) {
-            return '';
+        const standardKeyword = optimizeSearchInput(keyword);
+
+        setCurrentOptions(tmpOptions.filter((option)=>{
+            const standardLabel = optimizeSearchInput(option.label);
+            return standardLabel.includes(standardKeyword);
+        }));
+
+    }, [optionsSorted]);
+
+    const updateSelected = React.useCallback((index: number)=>{
+        setSelectedIndex(index);
+
+        let optionSelected:ILapisSelectionOption|undefined = undefined;
+
+        if(index < 0){
+            setSelectedClassName('');
         }
-
-        if (!options[selectedIndexRef.current]) {
-            return '';
+        else{
+            setSelectedClassName(' selected');
+            optionSelected = !options ? undefined : {...options[index]};
         }
+        
+        // dispatch event
+        if(onSelected) onSelected({
+            index,
+            option: optionSelected
+        });
 
-        return options[selectedIndexRef.current].label;
-    };
+    }, [onSelected, options]);
 
-    const standardizeOptionLabel = React.useCallback(
-        (label: string) => {
-            if (!maxLength) return label;
+    const displayOptions = React.useCallback(()=>{
+        setSelectingClassName(' selecting');
+    }, []);
 
-            if (label.length > maxLength) {
-                return `...${label.slice((maxLength - 3) * -1)}`;
+    const hideOptions = React.useCallback(()=>{
+        setSelectingClassName('');
+    },[]);
+
+    const updateMarkPosition = React.useCallback((v:number)=>{
+        setMarkPosition((currentMarkPosition:number)=>{
+            const newMarkPosition = currentMarkPosition + v;
+            if(newMarkPosition < -1){
+                return -1;
             }
-
-            return label;
-        },
-        [maxLength],
-    );
-
-    const filterOptions = React.useCallback(
-        (v?: string) => {
-            const newCurrentOptions: ICurrentOption[] = [];
-            newCurrentOptions.push({
-                value: undefined,
-                label: 'Remove selected',
-                index: -1,
-            });
-
-            optionsSorted.forEach((option) => {
-                if (v && v !== '') {
-                    const optionLabel = optimizeSearchInput(option.label);
-                    const inputValue = optimizeSearchInput(v);
-
-                    if (!optionLabel.includes(inputValue)) {
-                        return;
-                    }
+            if(newMarkPosition >= lengthOfCurrentOptions.current){
+                return lengthOfCurrentOptions.current - 1;
+            }
+            if(newMarkPosition >= 0 && newMarkPosition < currentOptionsRef.current.length){
+                if(lapisSelectionInputRef.current){
+                    lapisSelectionInputRef.current.val(currentOptionsRef.current[newMarkPosition].label);
                 }
-                newCurrentOptions.push({ ...option });
-            });
-
-            return newCurrentOptions;
-        },
-        [optionsSorted],
-    );
-
-    const inputValue = React.useCallback(
-        (v?: string) => {
-            if (!inputElmntRef.current) return undefined;
-            // get
-            if (v === undefined) {
-                return inputElmntRef.current.value;
             }
-            // set
-            inputElmntRef.current.value = v;
-            //
-            if (v === '') {
-                setClassInputEmpty('input-empty');
-            } else {
-                setClassInputEmpty('');
-            }
-        },
-        [inputElmntRef],
-    );
+            return newMarkPosition;
+        });
+    }, []);
 
-    const updateCurrentOptions = React.useCallback(
-        (v?: string) => {
-            setCurrentOptions(filterOptions(v));
-            //
-        },
-        [filterOptions],
-    );
+    // Event handler
+    const handlerCoverClick = React.useCallback(()=>{
+        hideOptions();
+    }, [hideOptions]);
 
-    // EVENT HANDLER
+    const handlerLapisSelectionInputFocus = React.useCallback(()=>{
+        if(lapisSelectionInputRef.current) lapisSelectionInputRef.current.empty();
 
-    const handlerInputFocus = React.useCallback(() => {
-        inputValue('');
-        setClassSelecting('selecting');
-    },
-    [inputValue]
-    );
+        setMarkPosition(-1);
+        displayOptions();
+    }, [displayOptions]);
 
-    const handlerCoverClick = React.useCallback(() => {
-        if (selectedIndexRef.current < 0) {
-            setClassSelected('');
-        } else {
-            setClassSelected('selected');
-        }
-
-        updateCurrentOptions();
-
-        // update state
-        setIndexMark(-1);
-        setClassSelecting('');
+    const handlerLapisSelectionOptionsSelected = React.useCallback((index:number)=>{
+        updateSelected(index);
+        hideOptions();
 
         // dispatch event
-        if(onBlur){
-            onBlur(makeSelectedEventData());
+    }, [updateSelected, hideOptions]);
+
+    const handlerLapisSelectionInputArrowDownPress = React.useCallback((v:string)=>{
+        // if(markPositionRef.current < 0){
+        //     memoLapisSelectionInputValueRef.current = v;
+        // }
+        updateMarkPosition(1);
+    }, [updateMarkPosition]);
+
+    const handlerLapisSelectionInputArrowUpPress = React.useCallback((v:string)=>{
+        // if(markPositionRef.current === 0){
+        //     if(lapisSelectionInputRef.current){
+        //         lapisSelectionInputRef.current.val(memoLapisSelectionInputValueRef.current);
+        //     }
+        // }
+        updateMarkPosition(-1);
+        
+    }, [updateMarkPosition]);
+
+    const handlerLapisSelectionInputEnterPress = React.useCallback((v:string)=>{
+        if(markPositionRef.current < 0) return;
+        if(markPositionRef.current >= currentOptionsRef.current.length) return;
+
+        // blur input
+        if(lapisSelectionInputRef.current && lapisSelectionInputRef.current !== null){
+            lapisSelectionInputRef.current.focus(false);
         }
-    },
-    [updateCurrentOptions, onBlur, makeSelectedEventData]
-    );
+        
+        updateSelected(currentOptionsRef.current[markPositionRef.current].index);
+        hideOptions();
+    }, [updateSelected, hideOptions]);
 
-    const handlerInputKeyDown = React.useCallback(
-        (e: React.KeyboardEvent<HTMLInputElement>) => {
-            switch (e.key) {
-                case 'ArrowDown': {
-                    e.preventDefault();
+    const handlerLapisSelectionInputOtherKeyPress = React.useCallback((v:string)=>{
+        filterOptions(v);
+        setMarkPosition(-1);
+        
+        if(v.length !== 0) setInputEmptyClassName('');
+    }, [filterOptions]);
 
-                    const nextIndex: number = indexMark + 1;
-                    if (nextIndex >= currentOptions.length) return;
+    const handlerLapisSelectionInputEmpty = React.useCallback(()=>{
+        filterOptions();
+        setInputEmptyClassName(' empty');
+    }, [filterOptions]);
 
-                    inputValue(currentOptions[nextIndex].label);
-                    setIndexMark(nextIndex);
-                    break;
-                }
-                case 'ArrowUp': {
-                    e.preventDefault();
+    const handlerLapisSelectionRemoveSelectedClick = React.useCallback(()=>{
+        updateSelected(-1);
+    }, [updateSelected]);
 
-                    const prevIndex: number = indexMark - 1;
-                    if (prevIndex < 0) return;
-
-                    inputValue(currentOptions[prevIndex].label);
-                    setIndexMark(prevIndex);
-
-                    break;
-                }
-                case 'Enter': {
-                    if (indexMark < 0) return;
-
-                    const { label, index } = currentOptions[indexMark];
-
-                    selectedIndexRef.current = index;
-                    setIndexMark(-1);
-
-                    if (index === -1) {
-                        inputValue('');
-                        updateCurrentOptions();
-                    } else {
-                        inputValue(label);
-                        updateCurrentOptions(label);
-                    }
-
-                    // dispatch event
-                    if(onSelected) onSelected(makeSelectedEventData())
-
-                    break;
-                }
-                case 'Tab': {
-                    handlerCoverClick();
-                    break;
-                }
-                default: {
-                    setIndexMark(-1); // remove mark of option when press arrow up or arrow down key
-                    updateCurrentOptions(e.currentTarget.value);
-                }
-            }
-        },
-        [
-            updateCurrentOptions,
-            indexMark,
-            inputValue,
-            currentOptions,
-            handlerCoverClick,
-            onSelected,
-            makeSelectedEventData,
-        ],
-    );
-
-    const handlerInputKeyUp = React.useCallback(
-        (e: React.KeyboardEvent<HTMLInputElement>) => {
-            switch (e.key) {
-                case 'Backspace': {
-                    if (inputValue() === '') {
-                        setClassInputEmpty('input-empty');
-                    }
-                    break;
-                }
-                default: {
-                    if (inputValue() !== '') {
-                        setClassInputEmpty('');
-                    }
-                }
-            }
-        },
-        [inputValue],
-    );
-
-    const handlerOptionClick = React.useCallback(
-        (index: number) => () => {
-            selectedIndexRef.current = index;
-            handlerCoverClick();
-
-            // dispatch event
-            if (onSelected) onSelected(makeSelectedEventData());
-        },
-        [onSelected, handlerCoverClick, makeSelectedEventData],
-    );
-
-    // Update options when options of props change
-    React.useEffect(() => {
-        setCurrentOptions(filterOptions(''));
-    },
-    [filterOptions]);
-
-    React.useEffect(() => {
-        if (!selectedValue) {
+    React.useEffect(()=>{
+        // if selectedValue of props is undefined
+        if(!selectedValue){
+            setSelectedIndex(-1);
+            setSelectedClassName('')
             return;
         }
 
-        const optionSelected = optionsSorted.find((option) => {
-            return option.value === selectedValue;
-        });
+        // 
+        const selectedOption = optionsSorted.find((option) => option.value === selectedValue);
 
-        if (!optionSelected) {
+        // if not selected
+        if(!selectedOption) {
+            setSelectedIndex(-1);
+            setSelectedClassName('')
             return;
         }
 
-        selectedIndexRef.current = optionSelected.index;
-        setClassSelected('selected');
-    },
-    [selectedValue, optionsSorted]);
-
-    const renderOption = (): TLapisReactElements => {
-        if (currentOptions.length === 0) return undefined;
-
-        const optionElmnts: TLapisReactElements = currentOptions.map(
-            (currentOption, i) => {
-                const liClassName: string =
-                    selectedIndexRef.current === currentOption.index ? 'selected' : '';
-                const optionClassName = indexMark === i ? ' mark' : '';
-                //
-                return (
-                    <li key={`${i}-${currentOption.value}`} className={liClassName}>
-                        <div>
-                            <div
-                                onClick={handlerOptionClick(currentOption.index)}
-                                className={optionClassName}
-                            >
-                                {standardizeOptionLabel(currentOption.label)}
-                            </div>
-                        </div>
-                    </li>
-                );
-            },
-        );
-
-        return optionElmnts;
-    };
+        // if selected
+        const index = selectedOption.index;
+        setSelectedIndex(index);
+        setSelectedClassName(' selected');
+    }, [selectedValue, optionsSorted]);
 
     return (
-        <div className={`lapis-ui lapis-selection ${classSelecting} ${classSelected}`}>
+        <div className={`lapis-ui lapis-selection${selectedClassName}${selectingClassName}${inputEmptyClassName}`}>
             <div className='cover' onClick={handlerCoverClick}></div>
-            <div className='container'>
-                <div className='title'>
-                    <div>{props.title}</div>
-                </div>
-                <div className='input-wrap'>
-                    <div className={`label-selected ${classInputEmpty}`}>
-                        <div>{makeLabelSelectedContent()}</div>
-                    </div>
-                    <input
-                        ref={inputElmntRef}
-                        type='text'
-                        onFocus={handlerInputFocus}
-                        onKeyDown={handlerInputKeyDown}
-                        onKeyUp={handlerInputKeyUp}
+            <div className='lapis-selection-container'>
+                <LapisSelectionTitle value={props.title}/>
+
+                <div className='lapis-input-container'>
+                    <LapisSelectionLabelSelected value={makeLabelSelected()}/>
+
+                    <LapisSelectionInput
+                        ref={lapisSelectionInputRef}
+                        onFocus={handlerLapisSelectionInputFocus}
+                        onArrowDownPress={handlerLapisSelectionInputArrowDownPress}
+                        onArrowUpPress={handlerLapisSelectionInputArrowUpPress}
+                        onEnterPress={handlerLapisSelectionInputEnterPress}
+                        onOtherKeyPress={handlerLapisSelectionInputOtherKeyPress}
+                        onEmpty={handlerLapisSelectionInputEmpty}
                     />
-                    <div className={`icon-wrap ${props.showIcon ? 'show-icon' : ''}`}>
-                        <div
-                            className='icon'
-                            style={{ color: props.iconColor }}
-                        >
-                            {props.icon || ''}
-                        </div>
-                        <div
-                            className={`message ${props.message && 'show-message' }`}
-                        >
-                            {props.message || ''}
-                        </div>
-                    </div>
+
+                    <LapisSelectionRemoveSelected
+                        onClick={handlerLapisSelectionRemoveSelectedClick}
+                    />
+
+                    {/* Include message which display when icon is hovering*/}
+                    <LapisSelectionIconContainer
+                        icon={props.icon}
+                        iconColor={props.iconColor}
+                        showIcon={props.showIcon}
+                        message={props.message}
+                    />
                 </div>
-                <div className='line'>
-                    <div />
-                </div>
-                <div className='option'>
-                    <ul>{renderOption()}</ul>
-                </div>
+
+                <LapisSelectionUnderline/>
+                
+                <LapisSelectionOptions
+                    options={currentOptions}
+                    markPosition={markPosition}
+                    selectedIndex={selectedIndex}
+                    onSelected={handlerLapisSelectionOptionsSelected}
+                />
             </div>
         </div>
     );
